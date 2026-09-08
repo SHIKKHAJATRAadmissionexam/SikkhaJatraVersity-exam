@@ -1,593 +1,322 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অনলাইন মডেল টেস্ট</title>
-    <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --danger: #ef4444;
-            --success: #22c55e;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>অনলাইন এক্সাম পোর্টাল - OMR সিস্টেম</title>
+  <style>
+    :root {
+      --primary: #2b6cb0;
+      --success: #38a169;
+      --danger: #e53e3e;
+      --bg: #f7fafc;
+    }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #2d3748; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    
+    h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+    .tab-btn { padding: 8px 15px; border: none; background: #e2e8f0; cursor: pointer; border-radius: 5px; font-weight: bold; }
+    .tab-btn.active { background: var(--primary); color: #fff; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    /* Host Panel */
+    #host-panel { display: none; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 5px; }
+    
+    /* Student Exam UI */
+    #student-panel { display: block; }
+    .instructions { background: #fffaf0; border-left: 4px solid #dd6b20; padding: 10px; font-size: 13px; margin-bottom: 15px; line-height: 1.4; }
+    .exam-header { display: flex; justify-content: space-between; align-items: center; background: #edf2f7; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; position: sticky; top: 0; z-index: 100; }
+    .timer { color: var(--danger); font-size: 16px; }
+    
+    .layout-box { display: flex; flex-direction: column; gap: 15px; }
+    .question-viewer { border: 2px dashed #cbd5e0; padding: 10px; border-radius: 8px; text-align: center; background: #fafafa; max-height: 250px; overflow-y: auto; }
+    .question-viewer img { max-width: 100%; height: auto; border-radius: 4px; }
+    
+    .omr-sheet { max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; }
+    .section-title { background: #e2e8f0; padding: 6px 10px; font-weight: bold; font-size: 14px; margin: 10px 0 5px 0; border-radius: 4px; }
+    
+    .q-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid #edf2f7; }
+    .q-num { font-weight: bold; width: 35px; font-size: 13px; }
+    .options { display: flex; gap: 10px; }
+    .bubble { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #718096; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #4a5568; cursor: pointer; user-select: none; }
+    .bubble.selected { background-color: #1a202c; color: #fff; border-color: #1a202c; }
+    .bubble.disabled { pointer-events: none; opacity: 0.6; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Screen Management */
-        .screen {
-            display: none;
-        }
-        .screen.active {
-            display: block;
-        }
-
-        /* Front Page */
-        .front-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 700px;
-            margin: 40px auto;
-            text-align: center;
-        }
-
-        .front-card h1 {
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-size: 28px;
-        }
-
-        .instructions {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: left;
-            margin: 25px 0;
-        }
-
-        .instructions h3 {
-            margin-bottom: 10px;
-            color: var(--text-main);
-        }
-
-        .instructions ul {
-            padding-left: 20px;
-        }
-
-        .instructions li {
-            margin-bottom: 8px;
-            color: var(--text-muted);
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* Setup / Host Screen */
-        .setup-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 800px;
-            margin: 20px auto;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-
-        .setup-card h2 {
-            margin-bottom: 20px;
-            color: var(--primary);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        /* Exam Workspace layout */
-        .exam-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            height: calc(100vh - 40px);
-        }
-
-        @media (max-width: 900px) {
-            .exam-container {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-        }
-
-        .panel {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-
-        .timer {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--danger);
-            background: #fee2e2;
-            padding: 5px 12px;
-            border-radius: 20px;
-        }
-
-        /* Question Image Viewer Panel */
-        .image-viewer {
-            flex: 1;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .image-viewer img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* MCQ Scroll Panel */
-        .mcq-scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .mcq-item {
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .mcq-question-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 15px;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .option-btn {
-            background: white;
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-align: left;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .option-btn:hover:not(:disabled) {
-            border-color: var(--primary);
-            background: #e0e7ff;
-        }
-
-        .option-btn.selected {
-            background: var(--primary) !important;
-            color: white !important;
-            border-color: var(--primary) !important;
-        }
-
-        .submit-exam-btn {
-            margin-top: 15px;
-            width: 100%;
-            background-color: var(--success);
-        }
-        .submit-exam-btn:hover {
-            background-color: #16a34a;
-        }
-
-        /* Result Screen */
-        .result-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 800px;
-            margin: 20px auto;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-
-        .score-summary {
-            text-align: center;
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 8px;
-        }
-
-        .score-summary h2 {
-            color: var(--primary);
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .review-list {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .review-item {
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 10px;
-        }
-
-        .review-item.correct {
-            border-left: 4px solid var(--success);
-        }
-
-        .review-item.incorrect {
-            border-left: 4px solid var(--danger);
-        }
-
-        .review-item.unanswered {
-            border-left: 4px solid var(--text-muted);
-        }
-    </style>
+    /* Result Page */
+    #result-page { display: none; }
+    .result-card { background: #f0fff4; border: 1px solid #c6f6d5; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+    .ans-review { max-height: 300px; overflow-y: auto; font-size: 13px; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; }
+    .review-item { padding: 5px 0; border-bottom: 1px solid #f7fafc; display: flex; justify-content: space-between; }
+    
+    .btn { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+  </style>
 </head>
 <body>
 
 <div class="container">
+  
+  <!-- টগল করার বাটন (হোস্ট ও স্টুডেন্ট প্যানেল මාරු করার জন্য) -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('student')" id="btn-student">ছাত্র-ছাত্রী প্যানেল</button>
+    <button class="tab-btn" onclick="switchTab('host')" id="btn-host">হোস্ট / টিচার প্যানেল</button>
+  </div>
 
-    <!-- FRONT PAGE SCREEN -->
-    <div id="frontScreen" class="screen active">
-        <div class="front-card">
-            <h1>অনলাইন ফাইনাল মডেল টেস্ট</h1>
-            <p>আপনার নির্ধারিত পরীক্ষাটি নিচে দেওয়া নির্দেশিকা মেনে সম্পন্ন করুন।</p>
-            
-            <div class="instructions">
-                <h3>পরীক্ষার নির্দেশিকা (Instructions):</h3>
-                <ul>
-                    <li><strong>প্রশ্ন বিন্যাস:</strong> মোট ৬০টি প্রশ্ন (বাংলা ১ম-১৫, ইংরেজি ১৬-৩০, সাধারণ জ্ঞান ৩১-৬০)।</li>
-                    <li><strong>সময়সীমা:</strong> মোট সময় **৩৫ মিনিট**। ৩০ মিনিট অতিবাহিত হওয়ার পর নতুন কোনো উত্তর পরিবর্তন বা দাগানো যাবে না।</li>
-                    <li><strong>নেগেটিভ মার্কিং:</strong> প্রতিটি ভুল উত্তরের জন্য **০.২৫** নম্বর কাটা যাবে।</li>
-                    <li><strong>প্রশ্ন দেখার সুবিধা:</strong> ডানপাশে প্রশ্নপত্রের ছবি স্ক্রল করে দেখতে পারবেন এবং বামপাশে একইসাথে অপশনগুলোতে উত্তর দাগাতে পারবেন। বারবার স্ক্রল করে উপরে যাওয়ার প্রয়োজন নেই।</li>
-                    <li><strong>লক সিস্টেম:</strong> একবার কোনো অপশনে ক্লিক করলে তা সাবমিট বা লক হয়ে যাবে, পরবর্তীতে পরিবর্তন করা যাবে না।</li>
-                </ul>
-            </div>
-
-            <div style="margin-bottom: 20px; text-align: left;">
-                <label for="hostImageInput" style="font-weight: 600; display:block; margin-bottom:5px;">হোস্ট/শিক্ষক হিসেবে প্রশ্নপত্রের ছবি সেট করুন (Upload Question Image):</label>
-                <input type="file" id="hostImageInput" accept="image/*" class="form-control" style="padding: 6px;">
-            </div>
-
-            <button class="btn" id="startExamBtn">পরীক্ষা শুরু করুন (Start Exam)</button>
-        </div>
+  <!-- ১. হোস্ট প্যানেল (প্রশ্ন ও উত্তর সেট করার জন্য) -->
+  <div id="host-panel">
+    <h2>হোস্ট কন্ট্রোল প্যানেল</h2>
+    <p style="font-size: 13px; color: #666; text-align: center;">এখান থেকে প্রশ্ন ও সঠিক উত্তর সেট করুন, যা শিক্ষার্থীরা দেখতে পাবে।</p>
+    
+    <div class="form-group">
+      <label>প্রশ্নের ছবি আপলোড করুন:</label>
+      <input type="file" id="host-img-input" accept="image/*">
     </div>
 
-    <!-- EXAM SCREEN -->
-    <div id="examScreen" class="screen">
-        <div class="exam-container">
-            <!-- Left Panel: Question Image Viewer -->
-            <div class="panel">
-                <div class="panel-header">
-                    <h3>প্রশ্নপত্র (Question Image)</h3>
-                </div>
-                <div class="image-viewer" id="imageViewContainer">
-                    <img id="displayQuestionImg" src="" alt="প্রশ্নপত্রের ছবি এখানে প্রদর্শিত হবে">
-                </div>
-            </div>
-
-            <!-- Right Panel: MCQ Scrollable Workspace -->
-            <div class="panel">
-                <div class="panel-header">
-                    <h3>উত্তরপত্র (OMR Sheet)</h3>
-                    <div class="timer" id="timerDisplay">৩৫:০০</div>
-                </div>
-                
-                <div class="mcq-scroll-area" id="mcqScrollArea">
-                    <!-- Dynamic MCQs will be injected here -->
-                </div>
-
-                <button class="btn submit-exam-btn" id="submitExamBtn">পরীক্ষা জমা দিন (Submit Exam)</button>
-            </div>
-        </div>
+    <div class="form-group">
+      <label>সঠিক উত্তরগুলো লিখুন (কমা দিয়ে মোট ৬০টি, যেমন: A,B,C,D...):</label>
+      <textarea id="host-keys-input" rows="4" placeholder="A,B,C,D,A,B,C,D..."></textarea>
     </div>
 
-    <!-- RESULT SCREEN -->
-    <div id="resultScreen" class="screen">
-        <div class="result-card">
-            <div class="score-summary">
-                <h2>পরীক্ষার ফলাফল</h2>
-                <p id="scoreText" style="font-size: 20px; font-weight: bold;"></p>
-            </div>
+    <button class="btn" onclick="saveHostData()">সেভ ও পাবলিশ করুন</button>
+    <p id="save-msg" style="color: green; text-align: center; font-weight: bold; margin-top: 10px;"></p>
+  </div>
 
-            <h3>উত্তর পর্যালোচনা (Detailed Review)</h3>
-            <div class="review-list" id="reviewListContainer">
-                <!-- Detailed reviews injected here -->
-            </div>
-
-            <button class="btn" id="restartExamBtn" style="width: 100%;">পুনরায় পরীক্ষা দিন (Retake Exam)</button>
-        </div>
+  <!-- ২. স্টুডেন্ট প্যানেল (মূল পরীক্ষা) -->
+  <div id="student-panel">
+    
+    <!-- ফ্রন্ট পেজ / ইন্সট্রাকশন -->
+    <div id="front-page">
+      <h2>ভর্তি পরীক্ষা অনলাইন প্র্যাকটিস</h2>
+      <div class="instructions">
+        <b>নির্দেশাবলি:</b><br>
+        • বাংলা (১-১৫), ইংরেজি (১৬-৩০), সাধারণ জ্ঞান (৩১-৬০)। মোট ৬০টি প্রশ্ন।<br>
+        • পরীক্ষার সময়: ৩০ মিনিট। পরীক্ষা শুরু করলেই টাইমার চালু হয়ে যাবে।<br>
+        • একবার বৃত্ত ভরাট করলে তা আর পরিবর্তন করা যাবে না।<br>
+        • প্রতি ভুল উত্তরের জন্য ০.২৫ নম্বর কাটা যাবে।
+      </div>
+      <button class="btn" onclick="startExam()">পরীক্ষা শুরু করুন</button>
     </div>
+
+    <!-- মূল পরীক্ষা স্ক্রিন -->
+    <div id="exam-page" style="display: none;">
+      <div class="exam-header">
+        <span>টাইম বাকি:</span>
+        <span class="timer" id="time-left">30:00</span>
+        <button style="padding: 5px 10px; background:var(--danger); color:#fff; border:none; border-radius:4px; cursor:pointer;" onclick="submitExam()">জমা দিন</button>
+      </div>
+
+      <div class="layout-box">
+        <div class="question-viewer" id="q-viewer-box">
+          <p style="color:#a0aec0; margin:20px 0;">হোস্ট এখনো কোনো প্রশ্ন আপলোড করেননি।</p>
+        </div>
+        <div class="omr-sheet" id="omr-board"></div>
+      </div>
+    </div>
+
+    <!-- রেজাল্ট পেজ -->
+    <div id="result-page">
+      <h2>পরীক্ষার ফলাফল</h2>
+      <div class="result-card" id="score-summary"></div>
+      <h4>উত্তর পর্যালোচনা (আপনার উত্তর বনাম সঠিক উত্তর):</h4>
+      <div class="ans-review" id="review-list"></div>
+      <button class="btn" onclick="resetToFront()">পুনরায় পরীক্ষা দিন</button>
+    </div>
+
+  </div>
 
 </div>
 
 <script>
-    // Configuration & Data Structure for 60 Questions (1-15 Bangla, 16-30 English, 31-60 GK)
-    // Host can dynamically set custom answers or use default answer keys mapping (0 = Option A, 1 = Option B, etc.)
-    let correctAnswers = {};
-    for (let i = 1; i <= 60; i++) {
-        correctAnswers[i] = 0; // Default answer index A for setup blueprint
+  let totalQ = 60;
+  let timerInterval;
+  let timeLeft = 30 * 60;
+  let userAnswers = {};
+  
+  // ডিফল্ট ডেটা বা লোকালস্টোরেজ থেকে ডাটা লোড করা
+  let savedImage = localStorage.getItem('host_q_image') || '';
+  let savedKeys = localStorage.getItem('host_q_keys') || 'A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C,A,B,C,D,A,B,C,D,A,B,C,D,A,B,C';
+
+  // পেজ লোড হলে হোস্টের ইনপুট ফিল্ড ও ভিউয়ার আপডেট করা
+  document.getElementById('host-keys-input').value = savedKeys;
+  if(savedImage) {
+    document.getElementById('q-viewer-box').innerHTML = `<img src="${savedImage}" alt="Question Image">`;
+  }
+
+  function switchTab(role) {
+    if(role === 'student') {
+      document.getElementById('student-panel').style.display = 'block';
+      document.getElementById('host-panel').style.display = 'none';
+      document.getElementById('btn-student').classList.add('active');
+      document.getElementById('btn-host').classList.remove('active');
+    } else {
+      document.getElementById('student-panel').style.display = 'none';
+      document.getElementById('host-panel').style.display = 'block';
+      document.getElementById('btn-host').classList.add('active');
+      document.getElementById('btn-student').classList.remove('active');
     }
+  }
 
-    let userAnswers = {};
-    let timerInterval = null;
-    let timeLeft = 35 * 60; // 35 minutes in seconds
-    let isLockedAfter30Min = false;
-    let uploadedImageURL = "";
-
-    // DOM Elements
-    const frontScreen = document.getElementById('frontScreen');
-    const examScreen = document.getElementById('examScreen');
-    const resultScreen = document.getElementById('resultScreen');
-    const startExamBtn = document.getElementById('startExamBtn');
-    const submitExamBtn = document.getElementById('submitExamBtn');
-    const restartExamBtn = document.getElementById('restartExamBtn');
-    const hostImageInput = document.getElementById('hostImageInput');
-    const displayQuestionImg = document.getElementById('displayQuestionImg');
-    const mcqScrollArea = document.getElementById('mcqScrollArea');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const scoreText = document.getElementById('scoreText');
-    const reviewListContainer = document.getElementById('reviewListContainer');
-
-    // Handle Image Upload from Host
-    hostImageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            uploadedImageURL = URL.createObjectURL(file);
-        }
-    });
-
-    // Start Exam Action
-    startExamBtn.addEventListener('click', function() {
-        if (!uploadedImageURL) {
-            alert('অনুগ্রহ করে প্রথমে প্রশ্নপত্রের একটি ছবি আপলোড করুন!');
-            return;
-        }
-
-        displayQuestionImg.src = uploadedImageURL;
-        
-        // Reset states
-        userAnswers = {};
-        timeLeft = 35 * 60;
-        isLockedAfter30Min = false;
-        
-        buildMCQInterface();
-        
-        frontScreen.classList.remove('active');
-        examScreen.classList.add('active');
-
-        startTimer();
-    });
-
-    // Build 60 MCQs dynamically
-    function buildMCQInterface() {
-        mcqScrollArea.innerHTML = '';
-        const optionsList = ['A', 'B', 'C', 'D'];
-
-        for (let i = 1; i <= 60; i++) {
-            let sectionName = "";
-            if (i <= 15) sectionName = `বাংলা - প্রশ্ন নং ${i}`;
-            else if (i <= 30) sectionName = `ইংরেজি - প্রশ্ন নং ${i}`;
-            else sectionName = `সাধারণ জ্ঞান - প্রশ্ন নং ${i}`;
-
-            const mcqDiv = document.createElement('div');
-            mcqDiv.className = 'mcq-item';
-            mcqDiv.innerHTML = `
-                <div class="mcq-question-title">${sectionName}</div>
-                <div class="options-grid" id="q-options-${i}">
-                    ${optionsList.map((opt, optIdx) => `
-                        <button type="button" class="option-btn" data-q="${i}" data-opt="${optIdx}">অপশন ${opt}</button>
-                    `).join('')}
-                </div>
-            `;
-            mcqScrollArea.appendChild(mcqDiv);
-        }
-
-        // Add event listeners for option selections with single-click lock rule
-        document.querySelectorAll('.option-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Check if 30 minutes have elapsed (only 5 minutes remaining)
-                if (isLockedAfter30Min) {
-                    alert('৩০ মিনিট পার হয়ে গেছে, এখন আর উত্তর পরিবর্তন বা নতুন উত্তর দাগানো যাবে না!');
-                    return;
-                }
-
-                const qNum = this.getAttribute('data-q');
-                const optIdx = parseInt(this.getAttribute('data-opt'));
-
-                // Check if already answered (lock once answered rule)
-                if (userAnswers[qNum] !== undefined) {
-                    return; // Already locked/answered, cannot be changed
-                }
-
-                // Lock this question response
-                userAnswers[qNum] = optIdx;
-
-                // Visual styling update
-                const parentGrid = document.getElementById(`q-options-${qNum}`);
-                parentGrid.querySelectorAll('.option-btn').forEach((b, idx) => {
-                    b.disabled = true; // disable all options for this question once selected
-                    if (idx === optIdx) {
-                        b.classList.add('selected');
-                    }
-                });
-            });
-        });
+  // হোস্ট ডাটা সেভ করার ফাংশন
+  document.getElementById('host-img-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        savedImage = evt.target.result;
+      }
+      reader.readAsDataURL(file);
     }
+  });
 
-    // Timer Logic
-    function startTimer() {
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            timeLeft--;
+  function saveHostData() {
+    savedKeys = document.getElementById('host-keys-input').value.trim();
+    localStorage.setItem('host_q_keys', savedKeys);
+    if(savedImage) {
+      localStorage.setItem('host_q_image', savedImage);
+    }
+    document.getElementById('save-msg').innerText = 'সফলভাবে সেভ ও পাবলিশ করা হয়েছে!';
+    if(savedImage) {
+      document.getElementById('q-viewer-box').innerHTML = `<img src="${savedImage}" alt="Question Image">`;
+    }
+    setTimeout(() => { document.getElementById('save-msg').innerText = ''; }, 3000);
+  }
+
+  // পরীক্ষা শুরু
+  function startExam() {
+    document.getElementById('front-page').style.display = 'none';
+    document.getElementById('exam-page').style.display = 'block';
+    
+    userAnswers = {};
+    timeLeft = 30 * 60;
+    buildOMR();
+    startTimer();
+  }
+
+  function buildOMR() {
+    const board = document.getElementById('omr-board');
+    board.innerHTML = '';
+
+    let sections = [
+      { name: 'বাংলা (১ - ১৫)', start: 1, end: 15 },
+      { name: 'ইংরেজি (১৬ - ৩০)', start: 16, end: 30 },
+      { name: 'সাধারণ জ্ঞান (৩১ - ৬০)', start: 31, end: 60 }
+    ];
+
+    sections.forEach(sec => {
+      let secDiv = document.createElement('div');
+      secDiv.className = 'section-title';
+      secDiv.innerText = sec.name;
+      board.appendChild(secDiv);
+
+      for (let i = sec.start; i <= sec.end; i++) {
+        let row = document.createElement('div');
+        row.className = 'q-row';
+        
+        let num = document.createElement('div');
+        num.className = 'q-num';
+        num.innerText = i < 10 ? '0' + i : i;
+        
+        let options = document.createElement('div');
+        options.className = 'options';
+        
+        ['A', 'B', 'C', 'D'].forEach(opt => {
+          let bubble = document.createElement('div');
+          bubble.className = 'bubble';
+          bubble.innerText = opt;
+          bubble.dataset.q = i;
+          bubble.dataset.opt = opt;
+          
+          bubble.onclick = function() {
+            if (userAnswers[i]) return; // লক সিস্টেম
             
-            let minutes = Math.floor(timeLeft / 60);
-            let seconds = timeLeft % 60;
-            timerDisplay.textContent = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-            // Check if 30 minutes passed (meaning remaining time is 5 minutes or less, i.e., 30 minutes elapsed out of 35)
-            // 35 min total -> 30 min elapsed means 5 min left (300 seconds)
-            if (timeLeft === 300 && !isLockedAfter30Min) {
-                isLockedAfter30Min = true;
-                alert('৩০ মিনিট অতিবাহিত হয়েছে! এখন থেকে আর কোনো নতুন উত্তর দাগানো বা পরিবর্তন করা যাবে না।');
+            userAnswers[i] = opt;
+            let siblings = options.children;
+            for (let sib of siblings) {
+              sib.classList.add('disabled');
+              if (sib.dataset.opt === opt) {
+                sib.classList.add('selected');
+              }
             }
+          };
+          options.appendChild(bubble);
+        });
+        
+        row.appendChild(num);
+        row.appendChild(options);
+        board.appendChild(row);
+      }
+    });
+  }
 
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                alert('সময় শেষ! আপনার পরীক্ষা স্বয়ংক্রিয়ভাবে জমা দেওয়া হলো।');
-                submitExam();
-            }
-        }, 1000);
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        submitExam();
+        return;
+      }
+      timeLeft--;
+      let m = Math.floor(timeLeft / 60);
+      let s = timeLeft % 60;
+      document.getElementById('time-left').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+    }, 1000);
+  }
+
+  function submitExam() {
+    clearInterval(timerInterval);
+    document.getElementById('exam-page').style.display = 'none';
+    document.getElementById('result-page').style.display = 'block';
+
+    let correctAnswers = savedKeys.split(',').map(s => s.trim().toUpperCase());
+    while(correctAnswers.length < totalQ) {
+      correctAnswers.push('A');
     }
 
-    // Submit Exam Manual Click
-    submitExamBtn.addEventListener('click', function() {
-        if (confirm('আপনি কি নিশ্চিতভাবে পরীক্ষা জমা দিতে চান?')) {
-            clearInterval(timerInterval);
-            submitExam();
+    let correctCount = 0;
+    let wrongCount = 0;
+    let unattempted = 0;
+    let reviewHTML = '';
+
+    for (let i = 1; i <= totalQ; i++) {
+      let uAns = userAnswers[i] || 'দাগানো হয়নি';
+      let cAns = correctAnswers[i - 1];
+      let statusColor = 'gray';
+
+      if (userAnswers[i]) {
+        if (uAns === cAns) {
+          correctCount++;
+          statusColor = 'green';
+        } else {
+          wrongCount++;
+          statusColor = 'red';
         }
-    });
+      } else {
+        unattempted++;
+      }
 
-    // Calculate Result & Evaluation
-    function submitExam() {
-        examScreen.classList.remove('active');
-        resultScreen.classList.add('active');
-
-        let correctCount = 0;
-        let incorrectCount = 0;
-        let unansweredCount = 0;
-        let reviewHTML = '';
-
-        const optionsTextMap = ['A', 'B', 'C', 'D'];
-
-        for (let i = 1; i <= 60; i++) {
-            const userAns = userAnswers[i];
-            const correctAns = correctAnswers[i];
-            let statusClass = 'unanswered';
-            let statusText = 'উত্তর দেওয়া হয়নি';
-
-            if (userAns !== undefined) {
-                if (userAns === correctAns) {
-                    correctCount++;
-                    statusClass = 'correct';
-                    statusText = 'সঠিক';
-                } else {
-                    incorrectCount++;
-                    statusClass = 'incorrect';
-                    statusText = 'ভুল';
-                }
-            } else {
-                unansweredCount++;
-            }
-
-            let sectionPrefix = i <= 15 ? 'বাংলা' : (i <= 30 ? 'ইংরেজি' : 'সাধারণ জ্ঞান');
-            let userOptStr = userAns !== undefined ? optionsTextMap[userAns] : 'কোনোটিই নয়';
-            let correctOptStr = optionsTextMap[correctAns];
-
-            reviewHTML += `
-                <div class="review-item ${statusClass}">
-                    <strong>প্রশ্ন ${i} (${sectionPrefix}):</strong> [স্ট্যাটাস: ${statusText}]<br>
-                    আপনার উত্তর: <strong>${userOptStr}</strong> | সঠিক উত্তর: <strong>${correctOptStr}</strong>
-                </div>
-            `;
-        }
-
-        // Marking calculation: Correct = +1, Incorrect = -0.25
-        let finalScore = (correctCount * 1.0) - (incorrectCount * 0.25);
-        if (finalScore < 0) finalScore = 0;
-
-        scoreText.innerHTML = `
-            মোট সঠিক: ${correctCount} | ভুল: ${incorrectCount} | উত্তরহীন: ${unansweredCount}<br>
-            সর্বমোট প্রাপ্ত নম্বর: ${finalScore.toFixed(2)} (পূর্ণমান: ৬০)
-        `;
-        reviewListContainer.innerHTML = reviewHTML;
+      reviewHTML += `<div class="review-item">
+        <span>প্রশ্ন ${i}: আপনার উত্তর - <b style="color:${statusColor}">${uAns}</b></span>
+        <span>সঠিক উত্তর: <b>${cAns}</b></span>
+      </div>`;
     }
 
-    // Retake Exam Action
-    restartExamBtn.addEventListener('click', function() {
-        resultScreen.classList.remove('active');
-        frontScreen.classList.add('active');
-    });
+    let totalScore = (correctCount * 1.0) - (wrongCount * 0.25);
+    
+    document.getElementById('score-summary').innerHTML = `
+      <h3>ফলাফল বিবরণী</h3>
+      <p>সঠিক উত্তর: ${correctCount} | ভুল উত্তর: ${wrongCount} | বাদ পড়েছে: ${unattempted}</p>
+      <h2>প্রাপ্ত নম্বর: ${totalScore.toFixed(2)}</h2>
+    `;
+    document.getElementById('review-list').innerHTML = reviewHTML;
+  }
+
+  function resetToFront() {
+    document.getElementById('result-page').style.display = 'none';
+    document.getElementById('front-page').style.display = 'block';
+  }
 </script>
 
 </body>
