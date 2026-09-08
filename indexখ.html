@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online MCQ Exam Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .instruction-box { background: #eef2f7; padding: 15px; border-left: 5px solid #007bff; margin-bottom: 20px; border-radius: 4px; }
+        .flex-container { display: flex; gap: 20px; margin-top: 20px; }
+        .left-pane { flex: 1; border-right: 2px solid #ddd; padding-right: 15px; text-align: center; }
+        .left-pane img { max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 4px; max-height: 500px; object-fit: contain; }
+        .right-pane { flex: 1; max-height: 500px; overflow-y: auto; padding-left: 10px; }
+        .question-card { background: #fafafa; border: 1px solid #ddd; padding: 12px; margin-bottom: 12px; border-radius: 6px; }
+        .options label { display: block; margin: 5px 0; cursor: pointer; padding: 6px; background: #fff; border: 1px solid #ddd; border-radius: 4px; transition: 0.2s; }
+        .options label:hover { background: #f0f0f0; }
+        .timer { font-size: 18px; font-weight: bold; color: #d9534f; float: right; }
+        .btn { background: #28a745; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; margin-top: 15px; }
+        .btn:hover { background: #218838; }
+        .hidden { display: none; }
+        .result-box { margin-top: 20px; padding: 15px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Online MCQ Assessment</h2>
+    
+    <!-- Direction & Instructions Page -->
+    <div id="instruction-screen">
+        <div class="instruction-box">
+            <h3>Exam Instructions / Direction:</h3>
+            <ul>
+                <li>Total Questions: 60 (Bangla: 1-15, English: 1-15, GK: 1-30).</li>
+                <li>Total Time: 35 Minutes. (Note: Last 5 minutes submission window).</li>
+                <li>Negative Marking: 0.25 marks will be deducted for every wrong answer.</li>
+                <li><strong>Rule:</strong> Once you click an option, it will be locked and cannot be changed.</li>
+                <li>Questions are displayed on the left as an image, and you can scroll options on the right.</li>
+            </ul>
+        </div>
+        <button class="btn" onclick="startExam()">Start Exam</button>
+    </div>
+
+    <!-- Exam Screen -->
+    <div id="exam-screen" class="hidden">
+        <div>
+            <span id="category-title" style="font-weight: bold; font-size: 16px;">Exam in Progress</span>
+            <span class="timer" id="time-remaining">Time: 35:00</span>
+        </div>
+        
+        <div class="flex-container">
+            <!-- Question Image Container -->
+            <div class="left-pane">
+                <h4>Question Paper</h4>
+                <img id="q-image" src="" alt="Question Image">
+            </div>
+            
+            <!-- MCQ Options Container -->
+            <div class="right-pane" id="mcq-container">
+                <!-- Dynamic questions will load here -->
+            </div>
+        </div>
+
+        <button class="btn" onclick="submitExam()">Submit Exam</button>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="hidden">
+        <h2>Exam Results</h2>
+        <div class="result-box" id="score-summary"></div>
+        <div id="detailed-review" style="margin-top: 20px;"></div>
+        <button class="btn" onclick="restartExam()">Punorai Exam Din</button>
+    </div>
+</div>
+
+<script>
+    // Host Configurable Data: Tumi ekhane tomar question image link ar correct answers set kore dibe.
+    const examData = {
+        questionImageUrl: "https://via.placeholder.com/600x800?text=Upload+Your+Question+Image+Here",
+        // Total 60 questions-er correct answer er index (0 = A, 1 = B, 2 = C, 3 = D)
+        // Example array structure for 60 questions:
+        correctAnswers: [
+            0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, // Bangla (1-15)
+            3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, // English (1-15)
+            0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1 // GK (1-30)
+        ]
+    };
+
+    let userAnswers = {};
+    let timerInterval;
+    let timeLeft = 35 * 60; // 35 minutes
+
+    function startExam() {
+        document.getElementById('instruction-screen').classList.add('hidden');
+        document.getElementById('exam-screen').classList.remove('hidden');
+        
+        document.getElementById('q-image').src = examData.questionImageUrl;
+        loadQuestions();
+        startTimer();
+    }
+
+    function loadQuestions() {
+        const container = document.getElementById('mcq-container');
+        container.innerHTML = "";
+        
+        const totalQ = examData.correctAnswers.length;
+        for (let i = 0; i < totalQ; i++) {
+            let sectionName = i < 15 ? "Bangla" : (i < 30 ? "English" : "GK");
+            let qDiv = document.createElement('div');
+            qDiv.className = 'question-card';
+            qDiv.innerHTML = `
+                <strong>Q${i+1} (${sectionName})</strong>
+                <div class="options" id="q-opts-${i}">
+                    <label><input type="radio" name="q_${i}" value="0" onclick="lockOption(${i}, 0)"> (A)</label>
+                    <label><input type="radio" name="q_${i}" value="1" onclick="lockOption(${i}, 1)"> (B)</label>
+                    <label><input type="radio" name="q_${i}" value="2" onclick="lockOption(${i}, 2)"> (C)</label>
+                    <label><input type="radio" name="q_${i}" value="3" onclick="lockOption(${i}, 3)"> (D)</label>
+                </div>
+            `;
+            container.appendChild(qDiv);
+        }
+    }
+
+    function lockOption(qIndex, choice) {
+        userAnswers[qIndex] = choice;
+        // Disable all radio buttons for this question so it cannot be changed
+        const radios = document.querySelectorAll(`input[name="q_${qIndex}"]`);
+        radios.forEach(radio => radio.disabled = true);
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                submitExam();
+                return;
+            }
+            timeLeft--;
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('time-remaining').innerText = `Time: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }, 1000);
+    }
+
+    function submitExam() {
+        clearInterval(timerInterval);
+        document.getElementById('exam-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let unattempted = 0;
+        let reviewHTML = "<h3>Detailed Review:</h3>";
+
+        for (let i = 0; i < examData.correctAnswers.length; i++) {
+            let userAns = userAnswers[i];
+            let correctAns = examData.correctAnswers[i];
+            let optLetters = ['A', 'B', 'C', 'D'];
+
+            if (userAns === undefined) {
+                unattempted++;
+                reviewHTML += `<p>Q${i+1}: <span style="color:gray;">Not Answered</span> | Correct Answer: <b>${optLetters[correctAns]}</b></p>`;
+            } else if (userAns === correctAns) {
+                correctCount++;
+                score += 1;
+                reviewHTML += `<p>Q${i+1}: <span style="color:green;">Correct</span> (Your Ans: ${optLetters[userAns]})</p>`;
+            } else {
+                wrongCount++;
+                score -= 0.25;
+                reviewHTML += `<p>Q${i+1}: <span style="color:red;">Wrong</span> (Your Ans: ${optLetters[userAns]}, Correct Ans: <b>${optLetters[correctAns]}</b>)</p>`;
+            }
+        }
+
+        document.getElementById('score-summary').innerHTML = `
+            <b>Total Score:</b> ${score.toFixed(2)} / ${examData.correctAnswers.length}<br>
+            <b>Correct:</b> ${correctCount} | <b>Wrong:</b> ${wrongCount} | <b>Unattempted:</b> ${unattempted} <br>
+            <b>Negative Marking Deduction:</b> -${(wrongCount * 0.25).toFixed(2)}
+        `;
+        document.getElementById('detailed-verification').innerHTML = reviewHTML; // updated target
+        document.getElementById('detailed-review').innerHTML = reviewHTML;
+    }
+
+    function restartExam() {
+        timeLeft = 35 * 60;
+        userAnswers = {};
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('instruction-screen').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
