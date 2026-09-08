@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ভর্তি পরীক্ষা অনলাইন সিস্টেম</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #1a365d; }
+    .instruction { background: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; font-size: 14px; margin-bottom: 15px; line-height: 1.5; }
+    .timer-box { text-align: center; font-size: 18px; font-weight: bold; color: #e53e3e; margin-bottom: 15px; background: #fff5f5; padding: 8px; border-radius: 5px; }
+    
+    .section-title { background: #2b6cb0; color: white; padding: 8px 12px; font-weight: bold; margin-top: 20px; border-radius: 4px; font-size: 15px; }
+    .q-box { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #edf2f7; }
+    .q-num { font-weight: bold; font-size: 14px; width: 60px; }
+    .options { display: flex; gap: 10px; }
+    .bubble { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #4a5568; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; cursor: pointer; user-select: none; }
+    .bubble.selected { background-color: #2b6cb0; color: #fff; border-color: #2b6cb0; }
+    .bubble.locked { pointer-events: none; opacity: 0.7; }
+    
+    .btn { width: 100%; padding: 12px; background: #2b6cb0; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+    .btn:hover { background: #1a4971; }
+    
+    .hidden { display: none; }
+    .result-card { background: #f7fafc; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #e2e8f0; }
+    .result-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #cbd5e0; font-size: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <!-- Instruction / Home Screen -->
+  <div id="home-screen">
+    <h2>ভর্তি পরীক্ষা - ২০২৬</h2>
+    <div class="instruction">
+      <strong>নির্দেশাবলি:</strong><br>
+      • মোট প্রশ্ন: ৬০টি (বাংলা: ১-১৫, ইংরেজি: ১৬-৩০, সাধারণ জ্ঞান: ৩১-৬০)।<br>
+      • সময়: ৩০ মিনিট। প্রথম উত্তর দেওয়ার সাথে সাথেই টাইমার শুরু হবে।<br>
+      • প্রতিটি সঠিক উত্তরের জন্য ১ নম্বর এবং প্রতি ভুল উত্তরের জন্য ০.২৫ নম্বর কাটা যাবে।<br>
+      • একবার বিত্ত ভরাট বা ক্লিক করলে তা আর পরিবর্তন করা যাবে না।
+    </div>
+    <button class="btn" onclick="startExam()">পরীক্ষা শুরু করুন</button>
+  </div>
+
+  <!-- Exam Screen -->
+  <div id="exam-screen" class="hidden">
+    <div class="timer-box" id="timer">সময় বাকি: ৩০:০০</div>
+    <div id="question-container"></div>
+    <button class="btn" onclick="submitExam()">পরীক্ষা জমা দিন (Submit)</button>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="result-screen" class="hidden">
+    <h2>পরীক্ষার ফলাফল</h2>
+    <div class="result-card" id="result-details"></div>
+    <button class="btn" onclick="restartExam()">পুনরায় পরীক্ষা দিন</button>
+  </div>
+</div>
+
+<script>
+  // সঠিক উত্তর সেট করার জায়গা (Host হিসেবে আপনি এখান থেকে উত্তর পরিবর্তন করতে পারবেন)
+  const correctAnswers = {
+    1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'A', 6: 'B', 7: 'C', 8: 'D', 9: 'A', 10: 'B', 11: 'C', 12: 'D', 13: 'A', 14: 'B', 15: 'C',
+    16: 'A', 17: 'B', 18: 'C', 19: 'D', 20: 'A', 21: 'B', 22: 'C', 23: 'D', 24: 'A', 25: 'B', 26: 'C', 27: 'D', 28: 'A', 29: 'B', 30: 'C',
+    31: 'A', 32: 'B', 33: 'C', 34: 'D', 35: 'A', 36: 'B', 37: 'C', 38: 'D', 39: 'A', 40: 'B', 41: 'C', 42: 'D', 43: 'A', 44: 'B', 45: 'C',
+    46: 'D', 47: 'A', 48: 'B', 49: 'C', 50: 'D', 51: 'A', 52: 'B', 53: 'C', 54: 'D', 55: 'A', 56: 'B', 57: 'C', 58: 'D', 59: 'A', 60: 'B'
+  };
+
+  let userAnswers = {};
+  let timerInterval;
+  let timeLeft = 30 * 60; // ৩০ মিনিট
+  let examStarted = false;
+
+  function startExam() {
+    document.getElementById('home-screen').classList.add('hidden');
+    document.getElementById('exam-screen').classList.remove('hidden');
+    buildOMRSheet();
+  }
+
+  function buildOMRSheet() {
+    const container = document.getElementById('question-container');
+    container.innerHTML = '';
+
+    let html = '';
+    for (let i = 1; i <= 60; i++) {
+      if (i === 1) html += `<div class="section-title">বাংলা অংশ (১ - ১৫)</div>`;
+      if (i === 16) html += `<div class="section-title">ইংরেজি অংশ (১৬ - ৩০)</div>`;
+      if (i === 31) html += `<div class="section-title">সাধারণ জ্ঞান অংশ (৩১ - ৬০)</div>`;
+
+      let qNumStr = i < 10 ? '0' + i : i;
+      html += `
+        <div class="q-box" id="q-row-${i}">
+          <div class="q-num">${qNumStr}.</div>
+          <div class="options">
+            <div class="bubble" onclick="selectOption(${i}, 'A')">A</div>
+            <div class="bubble" onclick="selectOption(${i}, 'B')">B</div>
+            <div class="bubble" onclick="selectOption(${i}, 'C')">C</div>
+            <div class="bubble" onclick="selectOption(${i}, 'D')">D</div>
+          </div>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+  }
+
+  function selectOption(qNo, opt) {
+    if (!examStarted) {
+      examStarted = true;
+      startTimer();
+    }
+
+    // যদি এই প্রশ্নের উত্তর আগেই দেওয়া হয়ে থাকে, তবে পরিবর্তন করতে দেবে না (Lock System)
+    if (userAnswers[qNo]) return;
+
+    userAnswers[qNo] = opt;
+
+    // ইউজার ইন্টারফেসে সিলেক্ট করা ও লক করা দেখানো
+    const row = document.getElementById(`q-row-${qNo}`);
+    const bubbles = row.querySelectorAll('.bubble');
+    bubbles.forEach(b => {
+      b.classList.add('locked'); // সব অপশন লক করে দেওয়া
+      if (b.innerText === opt) {
+        b.classList.add('selected'); // শুধু কাঙ্ক্ষিত অপশন সিলেক্ট হবে
+      }
+    });
+  }
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        submitExam();
+        return;
+      }
+      timeLeft--;
+      let mins = Math.floor(timeLeft / 60);
+      let secs = timeLeft % 60;
+      document.getElementById('timer').innerText = `সময় বাকি: ${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }, 1000);
+  }
+
+  function submitExam() {
+    clearInterval(timerInterval);
+    document.getElementById('exam-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+
+    let correctCount = 0;
+    let wrongCount = 0;
+    let skippedCount = 0;
+
+    for (let i = 1; i <= 60; i++) {
+      if (!userAnswers[i]) {
+        skippedCount++;
+      } else if (userAnswers[i] === correctAnswers[i]) {
+        correctCount++;
+      } else {
+        wrongCount++;
+      }
+    }
+
+    let negativeMark = wrongCount * 0.25;
+    let finalScore = correctCount - negativeMark;
+    if (finalScore < 0) finalScore = 0;
+
+    let resultHtml = `
+      <div class="result-row"><span>মোট প্রশ্ন:</span> <strong>৬০</strong></div>
+      <div class="result-row"><span>সঠিক উত্তর:</span> <strong style="color: green;">${correctCount}</strong></div>
+      <div class="result-row"><span>ভুল উত্তর:</span> <strong style="color: red;">${wrongCount}</strong></div>
+      <div class="result-row"><span>উত্তর করা হয়নি:</span> <strong>${skippedCount}</strong></div>
+      <div class="result-row"><span>নেগেটিভ মার্কিং কাটা:</span> <strong style="color: red;">-${negativeMark.toFixed(2)}</strong></div>
+      <div class="result-row" style="font-size: 17px; border-top: 2px solid #2b6cb0; margin-top: 8px; padding-top: 8px;">
+        <span>চূড়ান্ত প্রাপ্ত নম্বর:</span> <strong style="color: #2b6cb0;">${finalScore.toFixed(2)} / ৬০</strong>
+      </div>
+    `;
+    document.getElementById('result-details').innerHTML = resultHtml;
+  }
+
+  function restartExam() {
+    userAnswers = {};
+    timeLeft = 30 * 60;
+    examStarted = false;
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('home-screen').classList.remove('hidden');
+    document.getElementById('timer').innerText = `সময় বাকি: ৩০:০০`;
+  }
+</script>
+
+</body>
+</html>
