@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSC Model Test</title>
+<style>
+  body { margin: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  
+  /* Bam pashe prosno sthir thakbe */
+  .question-panel { width: 50%; background: #f4f4f4; padding: 10px; border-right: 2px solid #ccc; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .question-panel img { max-width: 100%; max-height: 100%; transition: transform 0.3s; cursor: zoom-in; }
+  .question-panel img:active { transform: scale(1.5); /* Zoom feature */ }
+  
+  /* Dan pashe OMR scroll hobe */
+  .omr-panel { width: 50%; padding: 20px; overflow-y: auto; }
+  .timer { position: sticky; top: 0; background: #fff; padding: 10px; font-weight: bold; color: red; border-bottom: 2px solid #ddd; z-index: 10; }
+  .question-row { margin-bottom: 15px; }
+  .options label { margin-right: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Left: Fixed Question Image -->
+<div class="question-panel">
+  <img src="your-question-image.jpg" alt="Prosner Chobi Ekhane Asbe">
+</div>
+
+<!-- Right: Scrollable OMR -->
+<div class="omr-panel">
+  <div class="timer">Time Left: <span id="time">40:00</span></div>
+  
+  <h3>Bangla (1-15)</h3>
+  <div id="omr-form">
+    <!-- Demo Question 1 -->
+    <div class="question-row" id="q1">
+      <span>1.</span>
+      <span class="options">
+        <label><input type="radio" name="q1" value="K"> K</label>
+        <label><input type="radio" name="q1" value="Kh"> Kh</label>
+        <label><input type="radio" name="q1" value="G"> G</label>
+        <label><input type="radio" name="q1" value="Gh"> Gh</label>
+      </span>
+    </div>
+    <!-- Demo Question 2 -->
+    <div class="question-row" id="q2">
+      <span>2.</span>
+      <span class="options">
+        <label><input type="radio" name="q2" value="K"> K</label>
+        <label><input type="radio" name="q2" value="Kh"> Kh</label>
+        <label><input type="radio" name="q2" value="G"> G</label>
+        <label><input type="radio" name="q2" value="Gh"> Gh</label>
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // One-time click logic (Ekbar dagaile r change kora jabe na)
+  document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const groupName = this.name;
+      // Disable all other options in this question
+      document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
+        if (!r.checked) r.disabled = true;
+      });
+    });
+  });
+
+  // Timer Logic
+  let time = 40 * 60; // 40 minutes in seconds
+  setInterval(() => {
+    if(time <= 0) {
+      alert("Time is up! Exam auto-submitted.");
+      // Auto submit code ekhane hobe
+    } else {
+      time--;
+      let min = Math.floor(time / 60);
+      let sec = time % 60;
+      document.getElementById("time").innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+  }, 1000);
+</script>
+</body>
+</html>
