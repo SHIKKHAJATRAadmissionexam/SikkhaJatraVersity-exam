@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>মেডিকেল ও ডেন্টাল ভর্তি পরীক্ষা - ডিজিটাল OMR মডেল টেস্ট</title>
+    <style>
+        :root {
+            --primary: #00695c;
+            --primary-dark: #004d40;
+            --correct: #2e7d32;
+            --wrong: #c62828;
+            --telegram: #0088cc;
+            --telegram-dark: #006699;
+            --bg: #f4f6f9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: #333; position: relative; min-height: 100vh; }
+
+        /* Background Watermark */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            background-image: url('https://i.ibb.co.com/hFghg0hT/file-0000000070ec81fa8dafc95417eee3fb.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            font-size: 17px;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Top Corner Logo Style */
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #fff;
+            object-fit: cover;
+            border: 2px solid #fff;
+            flex-shrink: 0;
+        }
+
+        .container { max-width: 1200px; margin: 15px auto; padding: 0 10px; position: relative; z-index: 1; }
+        .card { background: rgba(255, 255, 255, 0.95); border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-success { background: #28a745; }
+        .btn-secondary { background: #6c757d; }
+        .btn-telegram { background: var(--telegram); }
+
+        /* Independent Scroll Layout */
+        .exam-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: calc(100vh - 90px);
+        }
+
+        @media (min-width: 768px) {
+            .exam-container {
+                display: grid;
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .question-panel {
+                height: 52vh !important;
+            }
+            .omr-panel {
+                height: 38vh !important;
+            }
+        }
+
+        .question-panel {
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .q-card {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+        }
+        .q-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a202c;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .q-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        @media (max-width: 480px) {
+            .q-options-grid { grid-template-columns: 1fr; }
+        }
+
+        .omr-panel {
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 100%;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .subject-title {
+            background: var(--primary);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .omr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .q-num { font-weight: bold; width: 35px; font-size: 14px; }
+        .options { display: flex; gap: 10px; }
+
+        .bubble {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+            background: white;
+        }
+        .bubble.selected { background: #333; color: white; border-color: #333; }
+        .bubble.disabled { cursor: not-allowed; opacity: 0.8; }
+
+        .bubble.correct-ans { background: var(--correct) !important; color: white !important; border-color: var(--correct) !important; }
+        .bubble.wrong-ans { background: var(--wrong) !important; color: white !important; border-color: var(--wrong) !important; }
+
+        .timer-badge {
+            background: white;
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .status-badge {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-brand">
+        <!-- Direct ImgBB Logo Link -->
+        <img src="https://i.ibb.co.com/hFghg0hT/file-0000000070ec81fa8dafc95417eee3fb.png" alt="Logo" class="header-logo">
+        <span>মেডিকেল ও ডেন্টাল ভর্তি পরীক্ষা ২০২৫–২৬</span>
+    </div>
+    <div id="timerContainer" class="hidden">
+        <span class="timer-badge">⏳ <span id="timer">60:00</span></span>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- STUDENT INSTRUCTION SCREEN -->
+    <div id="instructionPanel" class="card">
+        <h2 style="color: var(--primary); text-align: center; margin-bottom: 15px;">মেডিকেল ও ডেন্টাল ভর্তি পরীক্ষা - নির্দেশাবলী</h2>
+        <ul style="line-height: 1.8; margin-left: 20px; font-size: 15px;">
+            <li>এই পরীক্ষায় মোট <b>১০০টি (১-১০০)</b> বহুনির্বাচনি প্রশ্ন (MCQ) রয়েছে।</li>
+            <li>পরীক্ষার মোট সময় <b>৬০ মিনিট</b>। সময় শেষ হলে উত্তরপত্র স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।</li>
+            <li>প্রতিটি সঠিক উত্তরের জন্য <b>১ নম্বর</b> প্রদান করা হবে।</li>
+            <li>প্রতিটি ভুল উত্তরের জন্য <b>০.২৫ নম্বর</b> কাটা যাবে (Negative Marking)।</li>
+            <li><b>পাস নম্বর: ৪০।</b> (৪০ বা তার বেশি পেলে পাস, কম পেলে ফেল দেখাবে)।</li>
+            <li><b style="color: red;">সতর্কতা:</b> একটি অপশন একবার দাগানোর পর আর <b>পরিবর্তন করা যাবে না</b>।</li>
+            <li>প্রশ্নপত্র ও OMR শিট দুটি আলাদাভাবে স্বাধীনভাবে (independently) স্ক্রোল করতে পারবেন।</li>
+            <li style="margin-top: 8px;"><b>এইরকম আরও বেশি করে exam দিয়ে নিজেকে যাচাই করতে এখনই আমাদের telegram group এ যুক্ত হয়ে যাও telegram link: <a href="https://t.me/acsvarsitycourse" target="_blank" style="color: var(--telegram);">https://t.me/acsvarsitycourse</a></b></li>
+        </ul>
+        <button class="btn" onclick="startStudentExam()">Start Exam (পরীক্ষা শুরু করুন)</button>
+    </div>
+
+    <!-- EXAM SCREEN -->
+    <div id="examPanel" class="hidden">
+        <div class="exam-container">
+            <div class="question-panel card" id="questionBox"></div>
+            
+            <div class="omr-panel card">
+                <div class="subject-title">OMR Sheet (১ - ১০০)</div>
+                <div id="studentOmrGrid"></div>
+                <button class="btn" onclick="submitExam(false)" style="margin-top: 20px;">Submit Exam (জমা দিন)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="resultPanel" class="card hidden" style="text-align: center;">
+        <h2 style="color: var(--primary);">পরীক্ষার ফলাফল</h2>
+        <div style="font-size: 44px; font-weight: bold; margin: 10px 0; color: #222;" id="scoreDisplay">0 / 100</div>
+        
+        <div id="passFailStatus" class="status-badge"></div>
+
+        <div style="display: flex; justify-content: space-around; margin: 20px 0; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <div><h3 style="color: var(--correct)" id="correctCnt">0</h3><p>সঠিক</p></div>
+            <div><h3 style="color: var(--wrong)" id="wrongCnt">0</h3><p>ভুল</p></div>
+            <div><h3 style="color: #6c757d" id="skippedCnt">0</h3><p>স্কিপ</p></div>
+        </div>
+
+        <a href="https://t.me/acsvarsitycourse" target="_blank" class="btn btn-telegram" style="margin-bottom: 12px;">
+            ✈️ টেলিগ্রাম গ্রুপে যুক্ত হোন (Telegram Group)
+        </a>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-success" onclick="reviewExam()">১. সঠিক উত্তর গুলি দেখুন</button>
+            <button class="btn btn-secondary" onclick="retakeExam()">২. পুনরায় পরীক্ষা দিন</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const TOTAL_QUESTIONS = 100;
+    const EXAM_MINUTES = 60;
+    const PASS_MARK = 40;
+
+    const questionsData = [
+        { q: "১. ভাইরাস জনিত হেপাটাইটিস যে অঙ্গকে আক্রান্ত করে তার নাম–", opts: ["A. যকৃত", "B. মস্তিষ্ক", "C. হৃদপিণ্ড", "D. বৃক্ক"] },
+        { q: "২. গ্লাইকোলাইসিস ও ক্রেবস চক্রকে সংযোগ করে–", opts: ["A. সাইট্রিক এসিড", "B. সাকসিনিক এসিড", "C. এসিটাইল কো-এ", "D. মালিক এসিড"] },
+        { q: "৩. মানবদেহে ক্যান্সার সৃষ্টিকারী অন্যতম DNA ভাইরাস হলো–", opts: ["A. সাইমিয়ান ভাইরাস", "B. ফ্ল্যাভিভাইরাস", "C. এডিনোভাইরাস", "D. র‍্যাবডোভাইরাস"] },
+        { q: "৪. বিশ্বের ক্ষুদ্রতম আবৃতবীজী উদ্ভিদ এর নাম–", opts: ["A. Pistia", "B. Azolla", "C. Eucalyptus", "D. Wolffia"] },
+        { q: "৫. হরমোন প্রয়োগ করে বীজহীন ফল উৎপাদন করার প্রক্রিয়ার নাম–", opts: ["A. অ্যাপোগ্যামি", "B. সংকরায়ন", "C. ইমাস্কুলেশন", "D. পার্থেনোকার্পি"] },
+        { q: "৬. বাংলাদেশ যে প্রাণিভৌগোলিক অঞ্চলে অবস্থিত তার নাম–", opts: ["A. নিআর্কটিক অঞ্চল", "B. নিওট্রপিক্যাল অঞ্চল", "C. প্যালিআর্কটিক অঞ্চল", "D. ওরিয়েন্টাল অঞ্চল"] },
+        { q: "৭. শাপলা যে শ্রেণির জলজ উদ্ভিদ তার নাম –", opts: ["A. মূলাবদ্ধ পত্রভাসমান", "B. মূলাবদ্ধ নিমজ্জিত", "C. মূলাবদ্ধ উথ্বিত", "D. মুক্ত ভাসমান"] },
+        { q: "৮. উদ্ভিদের অতিপ্রয়োজনীয় মাইক্রো পুষ্টি উপাদানসমূহের অন্যতম হলো—", opts: ["A. ফসফরাস", "B. ম্যাগনেসিয়াম", "C. দস্তা", "D. সালফার"] },
+        { q: "৯. গ্লাইকোলাইসিস প্রক্রিয়া নিয়ন্ত্রণকারী এনজাইমের নাম?", opts: ["A. aldolase", "B. phosphoglucokinase", "C. phosphofructokinase", "D. enolase"] },
+        { q: "১০. উদ্ভিদে নিষেক হওয়া ব্যতীত ডিম্বাণু থেকে ভ্রূণ সৃষ্টির পদ্ধতির নাম?", opts: ["A. Agamospermy", "B. Androgenesis", "C. Apospory", "D. Parthenogenesis"] },
+        { q: "১১. একবীজপত্রী মূলের গঠনে অনুপস্থিত থাকে—", opts: ["A. পেরিসাইকেল", "B. হাইপোডার্মিস", "C. এন্ডোডার্মিস", "D. কর্টেক্স"] },
+        { q: "১২. পাতার গ্রাউন্ড টিস্যুর নাম–", opts: ["A. প্যালিসেড", "B. এন্ডোডার্মিস", "C. কর্টেক্স", "D. মেসোফিল"] },
+        { q: "১৩. দাঁতের যে অংশে রক্তনালী থাকে তার নাম–", opts: ["A. পাল্প", "B. এনামেল", "C. সিমেন্টাম", "D. ডেনটিন"] },
+        { q: "১৪. বৃহদন্ত্রের ব্যাকটেরিয়া দ্বারা প্রস্তুতকৃত ভিটামিন হলো–", opts: ["A. ভিটামিন-D", "B. ভিটামিন-K", "C. ভিটামিন-A", "D. ভিটামিন-E"] },
+        { q: "১৫. যে সাইনাসের প্রদাহের কারণে দুই চোখের মাঝখানে ব্যথা হয় তার নাম–", opts: ["A. ম্যাক্সিলারি সাইনাস", "B. এথময়েড সাইনাস", "C. স্ফেনয়েড সাইনাস", "D. ফ্রন্টাল সাইনাস"] },
+        { q: "১৬. কাইমোট্রিপসিন প্রধানত যে খাদ্যকে পরিপাক করে তা হলো–", opts: ["A. মাখন", "B. ডাল", "C. রুটি", "D. শাক"] },
+        { q: "১৭. হাইড্রার নিডোসাইটের কাজ হলো–", opts: ["A. শিকার ধরা", "B. অন্তঃকোষীয় পরিপাক", "C. ডিম্বাশয়ের পুনর্গঠন", "D. এনজাইম ক্ষরণ"] },
+        { q: "১৮. মানবভ্রূণে হৃদপিণ্ডের ক্রমবিকাশ শুরু হয়–", opts: ["A. দশম সপ্তাহে", "B. অষ্টম সপ্তাহে", "C. চতুর্থ সপ্তাহে", "D. পঞ্চম সপ্তাহে"] },
+        { q: "১৯. জেলিফিশ যে পর্বের প্রাণী তার নাম–", opts: ["A. মলাস্কা", "B. প্লাটিহেলমিনথেস", "C. নিডারিয়া", "D. আর্থ্রোপোডা"] },
+        { q: "২০. স্টেম কোষের উৎস হলো–", opts: ["A. Yolk sac", "B. Amnion", "C. Chorion", "D. Allantois"] },
+        { q: "২১. ডায়াফ্রাম যে মাংসপেশি দ্বারা গঠিত তার ধরন হলো–", opts: ["A. মসৃণ", "B. অনৈচ্ছিক", "C. ঐচ্ছিক", "D. মিশ্র"] },
+        { q: "২২. স্বাদের সাথে সম্পর্কিত করোটিক স্নায়ু হলো–", opts: ["A. হাইপোগ্লোসাল", "B. ফেসিয়াল", "C. ভেগাস", "D. অপটিক"] },
+        { q: "২৩. যে পর্বের প্রাণিদের মধ্যে দ্বিপার্শ্বীয় ক্লিভেজ পরিলক্ষিত হয়, তা হলো–", opts: ["A. Chordata", "B. Arthropoda", "C. Annelida", "D. Mollusca"] },
+        { q: "২৪. ভ্রূণ থেকে মায়ের শরীরে পরিবাহিত পদার্থের অন্তর্গত হলো–", opts: ["A. গ্লুকোজ", "B. অক্সিজেন", "C. কার্বন-ডাই-অক্সাইড", "D. লিপিড"] },
+        { q: "২৫. এরিথ্রোপয়েটিন উৎপন্ন হয়–", opts: ["A. ফুসফুস", "B. যকৃতে", "C. অস্থিমজ্জায়", "D. বৃক্কে"] },
+        { q: "২৬. অগ্ন্যাশয়ের আলফা কোষ থেকে নিঃসৃত হয়–", opts: ["A. গ্লুকাগন", "B. ইনসুলিন", "C. প্যানক্রিয়াটিক পলিপেপটাইড", "D. লাইপেজ"] },
+        { q: "২৭. মানবদেহের সবচেয়ে কঠিন আবরণ হলো–", opts: ["A. পেরিকার্ডিয়াম", "B. পেরিকন্ড্রিয়াম", "C. দাঁতের এনামেল", "D. পেরিঅস্টিয়াম"] },
+        { q: "২৮. দেহাভ্যন্তরের তুলনায় স্ক্রোটামের তাপমাত্রা হলো–", opts: ["A. ৩°C কম", "B. ২°C বেশি", "C. ৩°C বেশি", "D. ২°C কম"] },
+        { q: "২৯. বায়ুগহ্বরপূর্ণ অস্থিসম্পন্ন প্রাণিসমূহের অন্তর্গত হলো–", opts: ["A. পাখি", "B. ব্যাঙ", "C. মাছ", "D. সাপ"] },
+        { q: "৩০. রক্ত জমাট বাঁধাতে সাহায্যকারী আয়নের নাম—", opts: ["A. Na⁺", "B. K⁺", "C. Ca²⁺", "D. Fe²⁺"] },
+        { q: "৩১. যে সকল পরমাণুর ভর সংখ্যা একই কিন্তু পারমাণবিক সংখ্যা ভিন্ন, তাদের কে বলে–", opts: ["A. আইসোটোপ", "B. আইসোটোন", "C. আইসোমার", "D. আইসোবার"] },
+        { q: "৩২. কম্পোজিট কণিকার উদাহরণ হলো–", opts: ["A. quark", "B. deuteron", "C. lepton", "D. electron"] },
+        { q: "৩৩. ১০০০ মি. লি. ৫% NaOH দ্রবণে বিদ্যমান NaOH এর পরিমাণ হলো–", opts: ["A. 50 mg", "B. 5 gm", "C. 5 mg", "D. 50 gm"] },
+        { q: "৩৪. অবস্থাবেদে, জারক ও বিজারক হিসেবে কাজ করে–", opts: ["A. FeO", "B. KMnO₄", "C. FeCl₃", "D. H₂S"] },
+        { q: "৩৫. প্রাইমারি বায়ু দূষক হলো–", opts: ["A. SO₃", "B. SO₂", "C. HNO₃", "D. H₂SO₄"] },
+        { q: "৩৬. মেলামাইন থেকে উৎপন্ন, বৃক্কের জন্যে ক্ষতিকারক পদার্থের নাম–", opts: ["A. ইউরিয়া", "B. মেলাডুর", "C. সায়ানো ইউরিক এসিড", "D. নাইলন"] },
+        { q: "৩৭. 30°C তাপমাত্রা মান কেলভিন স্কেলে হয়–", opts: ["A. 219.15°", "B. 405.15°", "C. 325.15°", "D. 303.15°"] },
+        { q: "৩৮. মারাত্মক দাহ্য पदार्थ হলো–", opts: ["A. BaCl₂", "B. Lindane", "C. LPG", "D. NH₃ গ্যাস"] },
+        { q: "৩৯. জীবাণুনাশক হিসেবে ব্যবহৃত অতিবেগুনী রশ্মির তরঙ্গদৈর্ঘ্য হলো–", opts: ["A. 230nm–265nm", "B. 230nm–380nm", "C. 240nm–280nm", "D. 200nm–400nm"] },
+        { q: "৪০. বায়ুতে সর্বাধিক ঘনত্বে বিরাজমান নিষ্ক্রিয় গ্যাস হলো–", opts: ["A. রেডন", "B. নিয়ন", "C. হিলিয়াম", "D. আর্গন"] },
+        { q: "৪১. ধনাত্মক প্রভাবক হিসেবে ব্যবহৃত হয়–", opts: ["A. H₃PO₄", "B. Na₂SO₃", "C. MnO₂", "D. KMnO₄"] },
+        { q: "৪২. ল্যাবরেটরিতে ব্যবহৃত H₂SO₄ এর পরিবেশের উপর প্রভাবসমূহের অন্যতম হলো–", opts: ["A. মাটির খনিজ উপাদান সমূহের ক্ষয়", "B. বায়ু দূষণ", "C. মাটির অণুজীবের ধ্বংস", "D. উদ্ভিদের অতিজন্ম"] },
+        { q: "৪৩. মনোপ্যোটিক অম্লের উদাহরণ হলো–", opts: ["A. H₂CO₃", "B. H₂SO₄", "C. H₃PO₃", "D. HClO₄"] },
+        { q: "৪৪. যে বিক্রিয়া দ্বারা সাদৃশ্যপূর্ণ উচ্চতর অ্যালকেন উৎপন্ন করা হয় তার নাম–", opts: ["A. গ্রিগনার্ড বিক্রিয়া", "B. ক্লিমেনসেন বিজারণ", "C. ডিকার্বক্সিলেশন", "D. উটর্জ বিক্রিয়া"] },
+        { q: "৪৫. পৃথিবীর ওজন স্তরে ক্ষয় হলে তার পরিণতিতে ঘটতে পারে–", opts: ["A. খাদ্যনালীর ক্যান্সার", "B. ত্বকের ক্যান্সার", "C. অস্থিসন্ধির ব্যথা", "D. হৃদরোগ"] },
+        { q: "৪৬. ক্যালরিফিক মান বিচারে সবচেয়ে ভালো কয়লা হলো–", opts: ["A. লিগনাইট", "B. বিটুমিনাস", "C. অ্যানথ্রাসাইট", "D. পিট"] },
+        { q: "৪৭. যে ভারী धातুর কারণে ব্ল্যাক-ফুট ডিজিজ হয় তার প্রতীক হলো–", opts: ["A. As", "B. Cr", "C. Cd", "D. Pd"] },
+        { q: "৪৮. মোটরযানে ব্যবহৃত CNG তে বিদ্যমান মিথেন গ্যাসের শতকরা পরিমাণ হলো –", opts: ["A. ৯৫–৯৭", "B. ৯৫–৯৯", "C. ৯০–৯৫", "D. ৯৩–৯৮"] },
+        { q: "৪৯. STP তে কোন গ্যাসের মোলার আয়তন হলো–", opts: ["A. 24.8 liters", "B. 24.4 liters", "C. 22.8 liters", "D. 22.4 liters"] },
+        { q: "৫০. FeCl₃ দ্রবণের সাহায্যে শনাক্ত করা যায়–", opts: ["A. ফেনল", "B. কিটোন", "C. অ্যালডিহাইড", "D. এস্টার"] },
+        { q: "৫১. শুষ্ককারক ও নিরুদক পদার্থ উভয় হিসেবে ক্রিয়া সম্পাদন করে?", opts: ["A. SiO₂", "B. Al₂O₃", "C. KHSO₄", "D. P₂O₅"] },
+        { q: "৫২. যে রাসায়নিক দ্বারা খাদ্যদ্রব্যে ফরমালিনের উপস্থিতি নির্ণয় করা হয় তা হলো—", opts: ["A. ZnCl₂", "B. PCl₅", "C. 2,4-DNPH", "D. NaHCO₃"] },
+        { q: "৫৩. বায়ুমণ্ডলের যে স্তরে প্রাকৃতিক দুর্যোগসমূহের উৎপত্তি হয় তা হলো—", opts: ["A. মেসোস্ফিয়ার", "B. আয়োনোস্ফিয়ার", "C. স্ট্র্যাটোস্ফিয়ার", "D. ট্রপোস্ফিয়ার"] },
+        { q: "৫৪. রাসায়নিক বিক্রিয়ায় পরমাণুতে যে পরিবর্তন ঘটে তা হলো–", opts: ["A. প্রোটনের সংখ্যায়", "B. ইলেকট্রনের সংখ্যায়", "C. নিউট্রনের সংখ্যায়", "D. নিউক্লিয়াসের সংখ্যায়"] },
+        { q: "৫৫. বাংলাদেশে সুপার সাইক্লোনে বাতাসের ঘণ্টায় গতিবেগ হলো–", opts: ["A. ২২০ কি.মি. এর অধিক", "B. ১১৮–২১৯ কি.মি.", "C. ৮৮–১১৮ কি.মি.", "D. ৬২–৮৮ কি.মি."] },
+        { q: "৫৬. একটি ক্রেন দ্বারা 220 কেজি ভরের একটি বোঝা 0.1 ms⁻¹ ধ্রুববেগে উঠানো হলে, তার প্রয়োগকৃত ক্ষমতা হলো– (g = 9.8 ms⁻²)", opts: ["A. 200.8 W", "B. 215.6 W", "C. 245 W", "D. 196 W"] },
+        { q: "৫৭. তাপ গতিবিদ্যার শূন্যতম সূত্রের উপর ভিত্তি করে তৈরী হয়–", opts: ["A. ক্যালরিমিটার", "B. রেফ্রিজারেটর", "C. কার্নো ইঞ্জিন", "D. থার্মোমিটার"] },
+        { q: "৫৮. একটি 100 W বাল্ব দিনে ৫ ঘণ্টা করে ৩০ দিন জ্বালানো হলে ব্যবহৃত বৈদ্যুতিক শক্তির পরিমাণ হয়–", opts: ["A. 15 kWh", "B. 12 kWh", "C. 20 kWh", "D. 10 kWh"] },
+        { q: "৫৯. আলোর বর্ণ্যের ভিন্নতা যে পার্থক্যের কারণে ঘটে, তা হলো–", opts: ["A. উৎস", "B. বিস্তার", "C. তরঙ্গদৈর্ঘ্য", "D. তীব্রতা"] },
+        { q: "৬০. সবচেয়ে কম সান্দ্রতা সম্পন্ন গ্যাস হলো–", opts: ["A. জেনন", "B. হাইড্রোজেন", "C. ইথেন", "D. মিথেন"] },
+        { q: "৬১. সরল দোলকের সাহায্যে নির্ণয় করা যায়–", opts: ["A. মহাকর্ষীয় বিভব", "B. মহাকর্ষীয় ধ্রুবক", "C. মুক্তিবেগ", "D. অভিকর্ষজ ত্বরণ"] },
+        { q: "৬২. অপটিক্যাল ফাইবারের প্রধান উপাদান হলো–", opts: ["A. SiO₂", "B. CuO", "C. MgO", "D. CaO"] },
+        { q: "৬৩. পৃথিবীর মুক্তিবেগ হলো–", opts: ["A. 12.1 kms⁻¹", "B. 11.6 kms⁻¹", "C. 11.2 kms⁻¹", "D. 11.8 kms⁻¹"] },
+        { q: "৬৪. যে প্রক্রিয়ায় দুটি বস্তুর ঘর্ষণের ফলে তাপ উৎপন্ন হয় তা হলো –", opts: ["A. অপ্রত্যাবর্তী", "B. রুদ্ধতাপীয়", "C. প্রত্যাবর্তী", "D. সমোষ্ণ"] },
+        { q: "৬৫. 'ফ্লেমিং এর বাম-হস্ত নিয়ম' অনুযায়ী বৃদ্ধাঙ্গুলি নির্দেশ করে–", opts: ["A. চৌম্বক ভ্রামক", "B. চৌম্বক আবেশ ক্ষেত্র", "C. বিদ্যুৎ প্রবাহ", "D. পরিবাহীর বিক্ষোভ"] },
+        { q: "৬৬. তড়িৎ ক্ষেত্রে কোন নির্দিষ্ট বিন্দুতে স্থাপিত একটি একক ধনাত্মক আধান যে বল অনুভব করে তা হলো–", opts: ["A. তড়িৎ বল", "B. তড়িৎ ফ্লাক্স", "C. তড়িৎ প্রাবল্য", "D. তড়িৎ বিভব"] },
+        { q: "৬৭. সেমিকন্ডাক্টর রূপে ব্যবহৃত অপধাতুর প্রতীক হলো–", opts: ["A. Cu", "B. Al", "C. Ge", "D. Zn"] },
+        { q: "৬৮. ফারেনহাইট ও সেলসিয়াস স্কেলে যে তাপমাত্রা একই পাঠ পাওয়া যাবে তা হলো–", opts: ["A. 4°", "B. -40°", "C. 40°", "D. -4°"] },
+        { q: "৬৯. স্থির কাঠামোর তুলনায় গতিশীল কাঠামোর ঘড়ি ধীরে চলার ঘটনাকে বলে–", opts: ["A. দৈর্ঘ্য সংকোচন", "B. কাল দীর্ঘায়ন", "C. সময় সংকোচন", "D. ভরের আপেক্ষিকতা"] },
+        { q: "৭০. বাংলাদেশে বায়ুর আর্দ্রতা সবচেয়ে বেশি থাকে–", opts: ["A. ময়মনসিংহে অক্টোবর মাসে", "B. রংপুরে জুন মাসে", "C. সিলেটে মে মাসে", "D. চট্টগ্রামে আগস্ট মাসে"] },
+        { q: "৭১. A prefix containing word is–", opts: ["A. immoral", "B. immediate", "C. immense", "D. important"] },
+        { q: "৭২. The word without a prefix is–", opts: ["A. irrational", "B. irritable", "C. irresponsible", "D. irregular"] },
+        { q: "৭৩. \"I know you\". The complex form of the sentence is–", opts: ["A. \"I know who you were.\"", "B. \"I know who you be.\"", "C. \"I know who you are.\"", "D. \"I know who you.\""] },
+        { q: "৭৪. I heard the story from the horse's mouth. The underlined phrase means–", opts: ["A. from an authentic source", "B. from a doubtful source", "C. from an open source", "D. from an unreliable source"] },
+        { q: "৭৫. The team is________ eleven players. The correct phrase to fill in the gap is–", opts: ["A. made by", "B. made out of", "C. made up of", "D. made of"] },
+        { q: "৭৬. \"He had to suffer for his sins.\" Keeping the same meaning, the negative form of the statement is–", opts: ["A. He had no alternative to suffer for his sins.", "B. He has no way but to suffer for his sins.", "C. He would not but suffer for his sins.", "D. He could not but suffer for his sins."] },
+        { q: "৭৭. You should never look down the poor. The corrected Sentence is–", opts: ["A. You should never look down at the poor.", "B. You should never look down to the poor.", "C. You should never look down about the poor.", "D. You should never look down upon the poor."] },
+        { q: "৭৮. A person unable to pay back debts is called–", opts: ["A. poor", "B. cheat", "C. miser", "D. Bankrupt"] },
+        { q: "৭৯. The synonym of 'ideal' is–", opts: ["A. correct", "B. perfect", "C. good", "D. appropriate"] },
+        { q: "৮০. \"I could hardly make out the traffic signs through the fog.\" The underlined phrase means–", opts: ["A. recognize", "B. distinguish", "C. locate", "D. obey"] },
+        { q: "৮১. The supervisor took him________ task for his negligence. The correct preposition to fill in the gap is–", opts: ["A. for", "B. at", "C. to", "D. by"] },
+        { q: "৮২. All his dreams were shattered ________ the event. The correct preposition to fill in the gap is–", opts: ["A. with", "B. after", "C. on", "D. by"] },
+        { q: "৮৩. \"We mobilized funds for his treatment.\" Here, mobilized means–", opts: ["A. spent", "B. gave", "C. allocated", "D. collected"] },
+        { q: "৮৪. The phrase that expresses humility is–", opts: ["A. Yours respectfully", "B. faithfully yours", "C. sincerely yours", "D. Yours in appreciation"] },
+        { q: "৮৫. The verb of the word 'habit' is–", opts: ["A. habitual", "B. habituate", "C. habitable", "D. habitat"] },
+        { q: "৮৬. একই সময়ে বহু সমস্যা দেখা দিলে তা সমাধানের কৌশল হলো–", opts: ["A. গ্রাহ্য করা", "B. অগ্রাধিকার নির্ধারণ", "C. কঠিনটি দিয়ে শুরু করা", "D. সহজটি দিয়ে শুরু করা"] },
+        { q: "৮৭. বাংলাদেশে ইউনেস্কো স্বীকৃত বিশ্ব ঐতিহ্য স্থানসমূহের অন্তর্গত হলো–", opts: ["A. বাগেরহাট মসজিদ নগরী", "B. ময়নামতি বৌদ্ধবিহার", "C. বায়তুল মোকাররম মসজিদ", "D. লালবাগ কেল্লা"] },
+        { q: "৮৮. পলাশী যুদ্ধ সংঘটিত হয় যে সালে–", opts: ["A. ১৭১৯", "B. ১৫২৬", "C. ১৭৫৭", "D. ১৮৫৭"] },
+        { q: "৮৯. যে সংক্রামক রোগকে টিকা পরিপূর্ণ ভাবে নির্মূল করেছে তা হলো–", opts: ["A. জল বসন্ত", "B. জলাতঙ্ক", "C. গুটি বসন্ত", "D. হাম"] },
+        { q: "৯০. ভূমিকম্পের সৃষ্টি হয়–", opts: ["A. ভূ-অভ্যন্তরে তাপমাত্রার পার্থক্যের ফলে", "B. ভূ-গোলকের ঘূর্ণন গতি বৃদ্ধির কারণে", "C. টেকটোনিক প্লেটের সীমানায়", "D. ভূ-পৃষ্ঠের অভ্যন্তরীণ ও বহিঃস্থ কোষের সম্মিলন স্থলে"] },
+        { q: "৯১. বাংলাদেশে অধিক আম উৎপাদনকারী জেলার নাম–", opts: ["A. নরসিংদী", "B. মাদারীপুর", "C. রাজশাহী", "D. খাগড়াছড়ি"] },
+        { q: "৯২. ভারতের 'চিকেন নেক' করিডোর সংলগ্ন বাংলাদেশের অন্যতম জেলার নাম–", opts: ["A. পঞ্চগড়", "B. কুড়িগ্রাম", "C. সিলেট", "D. ঠাকুরগাঁও"] },
+        { q: "৯৩. একজন মেডিকেল শিক্ষার্থী কোর্সের মাঝ পথে এসে পড়াশোনার চাপে গুরুতর ভাবে অবসাদগ্রস্ত হয়ে পড়ে। তার উচিত ছিল—", opts: ["A. অতিরিক্ত পরিশ্রম এড়িয়ে চলা", "B. শিক্ষকদের সাহায্য নেওয়া", "C. বিশ্রামের ব্যাপারে সচেতন হওয়া", "D. ভর্তির আগে এ শিক্ষার চাপ বিষয়ে সচেতন হওয়া"] },
+        { q: "৯৪. মানব জিনোম প্রকল্প সমাপ্ত ঘোষণা করা হয় যে সালে–", opts: ["A. ২০১৫", "B. ২০০৩", "C. ২০০৯", "D. ২০২০"] },
+        { q: "৯৫. একটি শিক্ষার্থী নিজে পরীক্ষায় অকৃতকার্য হলেও বন্ধুর সাফল্যের তাকে অভিনন্দন জানালো। সে একজন—", opts: ["A. নিরপেক্ষ ব্যক্তি", "B. সৌজন্যপূর্ণ ব্যক্তি", "C. সহানুভূতিশীল ব্যক্তি", "D. সৎ ব্যক্তি"] },
+        { q: "৯৬. চট্টগ্রামে শাহাদাৎ বরণকারী 'জুলাই শহীদ' হলেন –", opts: ["A. ওয়াসিম আকরাম", "B. আবু সাঈদ", "C. মীর মুগ্ধ", "D. ফারহান"] },
+        { q: "৯৭. রক্তচাপ মাপার যন্ত্রের নাম–", opts: ["A. স্ফিগমোম্যানোমিটার", "B. ব্যারোমিটার", "C. অলটিমিটার", "D. ল্যাকটোমিটার"] },
+        { q: "৯৮. সম্পত্তি নিয়ে বিরোধে লিপ্ত আরমান ও সালমান দুই ভাই। ভালো বন্ধু হিসেবে কারও উচিত–", opts: ["A. বিরোধ নিষ্পত্তিতে মধ্যস্থতা করা", "B. দুর্বলকে পক্ষ নেওয়া", "C. সবলের পক্ষ নেওয়া", "D. তাদেরকে এড়িয়ে চলা"] },
+        { q: "৯৯. ক্রিকেটার মুশফিকুর রহিম তার শততম টেস্ট ম্যাচে একটি সেঞ্চুরী করেন। তার এই সাফল্যের পেছনে রয়েছে তার–", opts: ["A. ক্রিকেট বিষয়ে জ্ঞান", "B. দলীয় সহযোগিতা", "C. কঠোর অনুশীলন", "D. সহজাত প্রতিভা"] },
+        { q: "১০০. তীব্র ডায়রিয়া রোগে মৃত্যুর প্রধান কারণ–", opts: ["A. রক্ত শূন্যতা", "B. যকৃতের অকার্যকারিতা", "C. পরিপাকের অসুবিধা", "D. পানি শূন্যতা"] }
+    ];
+
+    const correctAnswers = {
+        "Q_1": "A", "Q_2": "C", "Q_3": "A", "Q_4": "D", "Q_5": "D", "Q_6": "D", "Q_7": "A", "Q_8": "C", "Q_9": "C", "Q_10": "D",
+        "Q_11": "B", "Q_12": "D", "Q_13": "A", "Q_14": "B", "Q_15": "B", "Q_16": "B", "Q_17": "A", "Q_18": "C", "Q_19": "C", "Q_20": "A",
+        "Q_21": "C", "Q_22": "B", "Q_23": "A", "Q_24": "C", "Q_25": "D", "Q_26": "A", "Q_27": "C", "Q_28": "D", "Q_29": "A", "Q_30": "C",
+        "Q_31": "D", "Q_32": "B", "Q_33": "D", "Q_34": "A", "Q_35": "B", "Q_36": "C", "Q_37": "D", "Q_38": "C", "Q_39": "C", "Q_40": "D",
+        "Q_41": "C", "Q_42": "C", "Q_43": "D", "Q_44": "D", "Q_45": "B", "Q_46": "C", "Q_47": "A", "Q_48": "B", "Q_49": "D", "Q_50": "A",
+        "Q_51": "D", "Q_52": "C", "Q_53": "D", "Q_54": "B", "Q_55": "A", "Q_56": "B", "Q_57": "D", "Q_58": "A", "Q_59": "C", "Q_60": "B",
+        "Q_61": "D", "Q_62": "A", "Q_63": "C", "Q_64": "A", "Q_65": "D", "Q_66": "C", "Q_67": "C", "Q_68": "B", "Q_69": "B", "Q_70": "D",
+        "Q_71": "A", "Q_72": "B", "Q_73": "C", "Q_74": "A", "Q_75": "C", "Q_76": "D", "Q_77": "D", "Q_78": "D", "Q_79": "B", "Q_80": "B",
+        "Q_81": "C", "Q_82": "D", "Q_83": "D", "Q_84": "A", "Q_85": "B", "Q_86": "B", "Q_87": "A", "Q_88": "C", "Q_89": "C", "Q_90": "C",
+        "Q_91": "C", "Q_92": "A", "Q_93": "B", "Q_94": "B", "Q_95": "B", "Q_96": "A", "Q_97": "A", "Q_98": "A", "Q_99": "C", "Q_100": "D"
+    };
+
+    let userAnswers = {};
+    let timerId = null;
+    let isReviewMode = false;
+
+    function renderQuestions() {
+        const qBox = document.getElementById('questionBox');
+        qBox.innerHTML = questionsData.map((item) => `
+            <div class="q-card">
+                <div class="q-title">${item.q}</div>
+                <div class="q-options-grid">
+                    ${item.opts.map(opt => `<div>${opt}</div>`).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderStudentOmr() {
+        let html = '';
+        for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+            const key = `Q_${i}`;
+            html += `
+            <div class="omr-row" id="row-${key}">
+                <span class="q-num">${i}.</span>
+                <div class="options">
+                    ${['A', 'B', 'C', 'D'].map(opt => `
+                        <div class="bubble" onclick="handleBubbleClick('${key}', '${opt}', this)">
+                            ${opt}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        }
+        document.getElementById('studentOmrGrid').innerHTML = html;
+    }
+
+    function handleBubbleClick(key, option, element) {
+        if (userAnswers[key] || isReviewMode) return;
+        userAnswers[key] = option;
+        element.classList.add('selected');
+
+        const parent = element.parentElement;
+        Array.from(parent.children).forEach(c => c.classList.add('disabled'));
+    }
+
+    function startStudentExam() {
+        document.getElementById('instructionPanel').classList.add('hidden');
+        document.getElementById('examPanel').classList.remove('hidden');
+        document.getElementById('timerContainer').classList.remove('hidden');
+
+        renderQuestions();
+        userAnswers = {};
+        isReviewMode = false;
+        renderStudentOmr();
+        startTimer(EXAM_MINUTES * 60);
+    }
+
+    function startTimer(seconds) {
+        clearInterval(timerId);
+        const timerDisp = document.getElementById('timer');
+
+        timerId = setInterval(() => {
+            let m = Math.floor(seconds / 60);
+            let s = seconds % 60;
+
+            m = m < 10 ? '0' + m : m;
+            s = s < 10 ? '0' + s : s;
+
+            timerDisp.textContent = `${m}:${s}`;
+
+            if (--seconds < 0) {
+                clearInterval(timerId);
+                alert('৬০ মিনিট সময় শেষ! উত্তরপত্র জমা নেওয়া হলো।');
+                submitExam(true);
+            }
+        }, 1000);
+    }
+
+    function submitExam(autoSubmit = false) {
+        if (!autoSubmit && !confirm("আপনি কি নিশ্চিত যে উত্তরপত্র জমা দিতে চান?")) return;
+
+        clearInterval(timerId);
+        document.getElementById('timerContainer').classList.add('hidden');
+        document.getElementById('examPanel').classList.add('hidden');
+        document.getElementById('resultPanel').classList.remove('hidden');
+
+        calculateResults();
+    }
+
+    function calculateResults() {
+        let correct = 0;
+        let wrong = 0;
+        let skipped = 0;
+
+        for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+            const key = `Q_${i}`;
+            const user = userAnswers[key];
+            const right = correctAnswers[key];
+
+            if (!user) {
+                skipped++;
+            } else if (user === right) {
+                correct++;
+            } else {
+                wrong++;
+            }
+        }
+
+        const totalMark = (correct * 1.0) - (wrong * 0.25);
+        const isPassed = totalMark >= PASS_MARK;
+
+        document.getElementById('scoreDisplay').textContent = `${totalMark.toFixed(2)} / ${TOTAL_QUESTIONS}`;
+        
+        const statusElem = document.getElementById('passFailStatus');
+        if (isPassed) {
+            statusElem.textContent = '🎉 অভিনন্দন! আপনি পাস করেছেন।';
+            statusElem.style.color = 'var(--correct)';
+        } else {
+            statusElem.textContent = '❌ দুঃখিত! আপনি ফেল করেছেন।';
+            statusElem.style.color = 'var(--wrong)';
+        }
+
+        document.getElementById('correctCnt').textContent = correct;
+        document.getElementById('wrongCnt').textContent = wrong;
+        document.getElementById('skippedCnt').textContent = skipped;
+    }
+
+    function reviewExam() {
+        isReviewMode = true;
+        document.getElementById('resultPanel').classList.add('hidden');
+        document.getElementById('examPanel').classList.remove('hidden');
+
+        for (let i = 1; i <= TOTAL_QUESTIONS; i++) {
+            const key = `Q_${i}`;
+            const row = document.getElementById(`row-${key}`);
+            if (!row) continue;
+
+            const bubbles = row.querySelectorAll('.bubble');
+            const user = userAnswers[key];
+            const right = correctAnswers[key];
+
+            bubbles.forEach(b => {
+                const opt = b.textContent.trim();
+                b.classList.remove('selected', 'disabled');
+
+                if (opt === right) {
+                    b.classList.add('correct-ans');
+                }
+                if (user && opt === user && user !== right) {
+                    b.classList.add('wrong-ans');
+                }
+            });
+        }
+    }
+
+    function retakeExam() {
+        document.getElementById('resultPanel').classList.add('hidden');
+        startStudentExam();
+    }
+</script>
+
+</body>
+</html>
